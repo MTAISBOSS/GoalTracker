@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Happy Goals</title>
+    <style>
+      body {
+        font-family: "Comic Neue", sans-serif;
+        background-color: #fff9f2;
+        color: #5a5a5a;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .goal-palette {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #ffeedd;
+        border-radius: 15px;
+      }
+      .goal-item {
+        padding: 10px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .goal-item:hover {
+        transform: scale(1.05);
+      }
+      .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+      .day {
+        aspect-ratio: 1;
+        background-color: white;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        padding: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+      }
+      .day-header {
+        font-size: 0.8em;
+        text-align: center;
+        margin-bottom: 3px;
+      }
+      .day-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .goal-dot {
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+      }
+      .month-header {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 1.8em;
+        color: #ff9aa2;
+      }
+      .action-button {
+        background-color: #ffb7b2;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-family: inherit;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .action-button:hover {
+        transform: scale(1.05);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+      .modal-content {
+        background-color: #fff9f2;
+        padding: 25px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      .modal-title {
+        margin-top: 0;
+        color: #ff9aa2;
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ffdac1;
+        border-radius: 8px;
+        font-family: inherit;
+      }
+      .color-options {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .color-option {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      .color-option.selected {
+        border-color: #5a5a5a;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .modal-actions button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 8px;
+        font-family: inherit;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background-color: #a5d8ff;
+      }
+      .btn-secondary {
+        background-color: #e2f0cb;
+      }
+      .day-goals-container {
+        margin-top: 20px;
+      }
+      .day-selector {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .day-selector button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background-color: #e2f0cb;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .day-selector button.active {
+        background-color: #a5d8ff;
+      }
+      .goal-checkbox {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 8px;
+        border-radius: 8px;
+        background-color: #ffeedd;
+      }
+      .goal-checkbox input {
+        margin-right: 10px;
+      }
+      .goal-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>My Happy Goals 🌈</h1>
+      <button class="action-button" id="show-goals">Show Goals</button>
+    </div>
+
+    <div class="goal-palette" id="goalPalette">
+      <button class="action-button" id="add-goal">+ Add Goal</button>
+    </div>
+
+    <div class="month-header" id="monthHeader">June 2023</div>
+
+    <div class="calendar" id="calendar">
+      <div class="day-header">Sun</div>
+      <div class="day-header">Mon</div>
+      <div class="day-header">Tue</div>
+      <div class="day-header">Wed</div>
+      <div class="day-header">Thu</div>
+      <div class="day-header">Fri</div>
+      <div class="day-header">Sat</div>
+    </div>
+
+    <div class="modal" id="addGoalModal">
+      <div class="modal-content">
+        <h3 class="modal-title">Add New Goal</h3>
+        <div class="form-group">
+          <label for="goalName">Goal Name</label>
+          <input type="text" id="goalName" placeholder="Enter goal name" />
+        </div>
+        <div class="form-group">
+          <label>Choose Color</label>
+          <div class="color-options">
+            <div
+              class="color-option selected"
+              style="background-color: #a5d8ff"
+              data-color="#A5D8FF"
+            ></div>
+            <div
+              class="color-option"
+              style="background-color: #b5ead7"
+              data-color="#B5EAD7"
+            ></div>
+            <div
+              class="color-option"
+              style="background-color: #ffdac1"
+              data-color="#FFDAC1"
+            ></div>
+            <div
+              class="color-option"
+              style="background-color: #e2f0cb"
+              data-color="#E2F0CB"
+            ></div>
+            <div
+              class="color-option"
+              style="background-color: #ffb7b2"
+              data-color="#FFB7B2"
+            ></div>
+            <div
+              class="color-option"
+              style="background-color: #c7ceea"
+              data-color="#C7CEEA"
+            ></div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelGoal">Cancel</button>
+          <button class="btn-primary" id="saveGoal">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="showGoalsModal">
+      <div class="modal-content">
+        <h3 class="modal-title">Track Goals</h3>
+        <div class="day-selector" id="daySelector"></div>
+        <div class="day-goals-container" id="dayGoalsContainer"></div>
+        <div class="modal-actions">
+          <button class="btn-primary" id="closeGoalsModal">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let goals = [];
+      let trackedDays = {};
+      let selectedColor = "#A5D8FF";
+      let selectedGoal = null;
+      let currentViewDay = new Date().getDate();
+
+      const goalPalette = document.getElementById("goalPalette");
+      const calendar = document.getElementById("calendar");
+      const addGoalBtn = document.getElementById("add-goal");
+      const showGoalsBtn = document.getElementById("show-goals");
+      const addGoalModal = document.getElementById("addGoalModal");
+      const showGoalsModal = document.getElementById("showGoalsModal");
+      const goalNameInput = document.getElementById("goalName");
+      const saveGoalBtn = document.getElementById("saveGoal");
+      const cancelGoalBtn = document.getElementById("cancelGoal");
+      const closeGoalsModal = document.getElementById("closeGoalsModal");
+      const colorOptions = document.querySelectorAll(".color-option");
+      const daySelector = document.getElementById("daySelector");
+      const dayGoalsContainer = document.getElementById("dayGoalsContainer");
+      const monthHeader = document.getElementById("monthHeader");
+
+      function loadData() {
+        const savedGoals = localStorage.getItem("happyGoals");
+        const savedTrackedDays = localStorage.getItem("happyTrackedDays");
+
+        if (savedGoals) goals = JSON.parse(savedGoals);
+        if (savedTrackedDays) trackedDays = JSON.parse(savedTrackedDays);
+
+        goals.forEach((goal) => renderGoal(goal));
+      }
+
+      function saveData() {
+        localStorage.setItem("happyGoals", JSON.stringify(goals));
+        localStorage.setItem("happyTrackedDays", JSON.stringify(trackedDays));
+      }
+
+      function initCalendar() {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        monthHeader.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(
+          currentYear,
+          currentMonth + 1,
+          0
+        ).getDate();
+
+        while (calendar.children.length > 7) {
+          calendar.removeChild(calendar.lastChild);
+        }
+
+        for (let i = 0; i < firstDay; i++) {
+          const emptyDay = document.createElement("div");
+          emptyDay.className = "day";
+          calendar.appendChild(emptyDay);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayElement = document.createElement("div");
+          dayElement.className = "day";
+
+          const dayHeader = document.createElement("div");
+          dayHeader.className = "day-header";
+          dayHeader.textContent = day;
+
+          const dayContent = document.createElement("div");
+          dayContent.className = "day-content";
+
+          dayElement.appendChild(dayHeader);
+          dayElement.appendChild(dayContent);
+
+          dayElement.addEventListener("click", () => {
+            if (selectedGoal) trackGoal(day, selectedGoal);
+          });
+
+          calendar.appendChild(dayElement);
+        }
+
+        updateCalendar();
+        initDaySelector(daysInMonth);
+      }
+
+      function initDaySelector(daysInMonth) {
+        daySelector.innerHTML = "";
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayBtn = document.createElement("button");
+          dayBtn.textContent = day;
+          dayBtn.addEventListener("click", () => {
+            currentViewDay = day;
+            updateDayGoalsView();
+            document.querySelectorAll("#daySelector button").forEach((btn) => {
+              btn.classList.toggle("active", parseInt(btn.textContent) === day);
+            });
+          });
+
+          if (day === currentViewDay) dayBtn.classList.add("active");
+          daySelector.appendChild(dayBtn);
+        }
+
+        updateDayGoalsView();
+      }
+
+      function updateDayGoalsView() {
+        dayGoalsContainer.innerHTML = "";
+
+        if (goals.length === 0) {
+          const noGoals = document.createElement("p");
+          noGoals.textContent = "No goals added yet.";
+          dayGoalsContainer.appendChild(noGoals);
+          return;
+        }
+
+        goals.forEach((goal) => {
+          const goalCheckbox = document.createElement("div");
+          goalCheckbox.className = "goal-checkbox";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = `goal-${goal.id}-day-${currentViewDay}`;
+          checkbox.checked = isGoalTracked(currentViewDay, goal.id);
+
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) trackGoal(currentViewDay, goal);
+            else untrackGoal(currentViewDay, goal.id);
+            updateCalendar();
+          });
+
+          const colorIndicator = document.createElement("div");
+          colorIndicator.className = "goal-color";
+          colorIndicator.style.backgroundColor = goal.color;
+
+          const label = document.createElement("label");
+          label.htmlFor = checkbox.id;
+          label.textContent = goal.name;
+
+          goalCheckbox.appendChild(checkbox);
+          goalCheckbox.appendChild(colorIndicator);
+          goalCheckbox.appendChild(label);
+
+          dayGoalsContainer.appendChild(goalCheckbox);
+        });
+      }
+
+      function isGoalTracked(day, goalId) {
+        const dayKey = `day-${day}`;
+        return trackedDays[dayKey] && trackedDays[dayKey].includes(goalId);
+      }
+
+      function updateCalendar() {
+        const dayElements = document.querySelectorAll(".day");
+
+        dayElements.forEach((dayElement, index) => {
+          if (index < 7 && !dayElement.querySelector(".day-header")) return;
+
+          const dayContent = dayElement.querySelector(".day-content");
+          dayContent.innerHTML = "";
+
+          const dayNumber = parseInt(
+            dayElement.querySelector(".day-header")?.textContent
+          );
+          if (isNaN(dayNumber)) return;
+
+          const dayKey = `day-${dayNumber}`;
+          if (trackedDays[dayKey]) {
+            trackedDays[dayKey].forEach((goalId) => {
+              const goal = goals.find((g) => g.id === goalId);
+              if (goal) {
+                const goalDot = document.createElement("div");
+                goalDot.className = "goal-dot";
+                goalDot.style.backgroundColor = goal.color;
+                dayContent.appendChild(goalDot);
+              }
+            });
+          }
+        });
+      }
+
+      function trackGoal(day, goal) {
+        const dayKey = `day-${day}`;
+
+        if (!trackedDays[dayKey]) trackedDays[dayKey] = [];
+
+        const goalIndex = trackedDays[dayKey].indexOf(goal.id);
+        if (goalIndex === -1) trackedDays[dayKey].push(goal.id);
+        else trackedDays[dayKey].splice(goalIndex, 1);
+
+        updateCalendar();
+        saveData();
+      }
+
+      function untrackGoal(day, goalId) {
+        const dayKey = `day-${day}`;
+
+        if (trackedDays[dayKey]) {
+          const goalIndex = trackedDays[dayKey].indexOf(goalId);
+          if (goalIndex !== -1) trackedDays[dayKey].splice(goalIndex, 1);
+          if (trackedDays[dayKey].length === 0) delete trackedDays[dayKey];
+        }
+        saveData();
+      }
+
+      function addGoal(name, color) {
+        const newGoal = {
+          id: Date.now().toString(),
+          name,
+          color,
+        };
+
+        goals.push(newGoal);
+        renderGoal(newGoal);
+        updateDayGoalsView();
+        saveData();
+      }
+
+      function renderGoal(goal) {
+        const goalElement = document.createElement("div");
+        goalElement.className = "goal-item";
+        goalElement.style.backgroundColor = goal.color;
+        goalElement.textContent = goal.name;
+
+        goalElement.addEventListener("click", () => {
+          document.querySelectorAll(".goal-item").forEach((item) => {
+            item.style.border = "none";
+          });
+          goalElement.style.border = "2px solid #5A5A5A";
+          selectedGoal = goal;
+        });
+
+        goalPalette.insertBefore(goalElement, addGoalBtn);
+      }
+
+      addGoalBtn.addEventListener("click", () => {
+        goalNameInput.value = "";
+        selectedColor = "#A5D8FF";
+        document.querySelectorAll(".color-option").forEach((option) => {
+          option.classList.toggle(
+            "selected",
+            option.dataset.color === selectedColor
+          );
+        });
+        addGoalModal.style.display = "flex";
+      });
+
+      showGoalsBtn.addEventListener("click", () => {
+        showGoalsModal.style.display = "flex";
+      });
+
+      cancelGoalBtn.addEventListener("click", () => {
+        addGoalModal.style.display = "none";
+      });
+
+      closeGoalsModal.addEventListener("click", () => {
+        showGoalsModal.style.display = "none";
+      });
+
+      saveGoalBtn.addEventListener("click", () => {
+        const name = goalNameInput.value.trim();
+        if (name) {
+          addGoal(name, selectedColor);
+          addGoalModal.style.display = "none";
+        }
+      });
+
+      colorOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          selectedColor = option.dataset.color;
+          document.querySelectorAll(".color-option").forEach((opt) => {
+            opt.classList.toggle("selected", opt === option);
+          });
+        });
+      });
+
+      window.addEventListener("click", (event) => {
+        if (event.target === addGoalModal) addGoalModal.style.display = "none";
+        if (event.target === showGoalsModal)
+          showGoalsModal.style.display = "none";
+      });
+
+      loadData();
+      initCalendar();
+    </script>
+  </body>
+</html>
